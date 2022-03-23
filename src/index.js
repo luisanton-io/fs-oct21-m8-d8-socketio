@@ -18,8 +18,6 @@ app.get('/online-users', (req, res) => {
     res.send({ onlineUsers })
 })
 
-
-
 // Handling some express routes/routers...
 //....
 
@@ -36,10 +34,15 @@ io.on("connection", (socket) => {
 
     socket.emit("welcome", { message: "Welcome!" })
 
-    socket.on("setUsername", ({ username }) => {
+    socket.on("setUsername", ({ username, room }) => {
         console.log(username)
 
-        onlineUsers.push({ username, id: socket.id })
+        onlineUsers.push({ username, id: socket.id, room })
+
+        // Now we have the socket join a specific "room"
+        socket.join(room)
+
+        console.log(socket.rooms)
 
         // Emits to the other end of the channel
         socket.emit("loggedin")
@@ -51,9 +54,11 @@ io.on("connection", (socket) => {
         // io.sockets.emit() 
     })
 
-    socket.on("sendmessage", (message) => {
+    socket.on("sendmessage", ({ message, room }) => {
         console.log(message)
-        socket.broadcast.emit("message", message)
+
+        // Emits only to people inside of the defined "room"
+        socket.to(room).emit("message", message)
     })
 
     socket.on("disconnect", () => {
