@@ -2,21 +2,15 @@ import express from "express";
 import { Server } from "socket.io";
 import { createServer } from "http";
 import cors from "cors";
+import { app } from "./app";
+import Room from "./rooms/model";
 
 // We can initialize a in-memory shared array that will be used in our socket handlers
 // as well as in our express routes.
 
-let onlineUsers = []
+let onlineUsers: OnlineUser[] = []
 
-// Initializing our express app
-const app = express();
 
-app.use(cors());
-app.use(express.json());
-
-app.get('/online-users', (req, res) => {
-    res.send({ onlineUsers })
-})
 
 // Handling some express routes/routers...
 //....
@@ -30,7 +24,7 @@ const io = new Server(httpServer, { /* options */ });
 
 io.on("connection", (socket) => {
     // ...
-    console.log(socket.id)
+    // console.log(socket.id)
 
     socket.emit("welcome", { message: "Welcome!" })
 
@@ -54,8 +48,12 @@ io.on("connection", (socket) => {
         // io.sockets.emit() 
     })
 
-    socket.on("sendmessage", ({ message, room }) => {
+    socket.on("sendmessage", async ({ message, room }) => {
         console.log(message)
+
+        await Room.findOneAndUpdate({ name: room }, {
+            $push: { messages: message }
+        })
 
         // Emits only to people inside of the defined "room"
         socket.to(room).emit("message", message)
@@ -68,8 +66,5 @@ io.on("connection", (socket) => {
 
 });
 
-// CAUTION: we do not app.listen() 
-// but rather httpServer.listen()
-httpServer.listen(3030, () => {
-    console.log("Server is listening on port 3030");
-});
+export { onlineUsers, httpServer }
+
