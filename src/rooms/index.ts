@@ -9,6 +9,7 @@ roomsRouter
             const room = new Room({
                 name: req.body.name
             })
+
             await room.save()
             res.status(201).send(room)
         } catch (e) {

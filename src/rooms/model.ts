@@ -19,7 +19,22 @@ const MessageSchema = new mongoose.Schema({
     }
 })
 
-const RoomSchema = new mongoose.Schema({
+// The interface Room is important because you need to define
+// the type of the document that will be extracted by the model.
+
+// NOT for the Model type checking (that happens directly using the Schema)
+// BUT for the Typescript compiler.
+
+interface Room {
+    name: string
+    messages: {
+        text: string,
+        sender: string,
+        timestamp: number
+    }[]
+}
+
+const RoomSchema = new mongoose.Schema<Room>({
     name: {
         type: String,
         required: true,
